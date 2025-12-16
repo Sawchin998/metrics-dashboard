@@ -38,12 +38,10 @@ class MetricsController < ApplicationController
   end
 
   # GET /metrics/stats
-  # WHY: Provides aggregated data for summary views
   def stats
     stats = Metric.category_stats
 
     # Transform to more usable format
-    # WHY: Clean data structure for frontend consumption
     category_stats = stats.each_with_object({}) do |stat, hash|
       hash[stat.category] = {
         average: stat.average.to_f.round(2),
@@ -59,7 +57,6 @@ class MetricsController < ApplicationController
   end
 
   # POST /metrics
-  # WHY: Allow manual metric creation (optional)
   def create
     metric = Metric.new(metric_params)
 
@@ -73,7 +70,6 @@ class MetricsController < ApplicationController
   private
 
   # Strong parameters for security
-  # WHY: Prevents mass assignment vulnerabilities
   def metric_params
     params.require(:metric).permit(:value, :category, :timestamp)
   end
