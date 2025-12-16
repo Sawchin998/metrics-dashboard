@@ -1,6 +1,5 @@
 # app/controllers/metrics_controller.rb
 class MetricsController < ApplicationController
-  skip_before_action :verify_authenticity_token
 
   # GET /metrics
   def index
