@@ -1,51 +1,31 @@
 # angular-frontend/Dockerfile
 
-# Multi-stage build: Build stage
+# Build stage
 FROM node:18-alpine AS builder
 
-# Set working directory
 WORKDIR /app
 
 # Copy package files
-COPY package.json package-lock.json ./
+COPY package*.json ./
 
 # Install dependencies
-RUN npm ci
+RUN npm install
 
 # Copy source code
 COPY . .
 
-# Build Angular application
-RUN npm run build --prod
+# Build Angular app
+RUN npm run build --configuration=production
 
-# Runtime stage: Nginx to serve static files
+# Runtime stage
 FROM nginx:alpine
 
-# Copy custom nginx configuration
-COPY nginx.conf /etc/nginx/nginx.conf
+# Copy built app
+COPY --from=builder /app/dist/angular-frontend /usr/share/nginx/html
 
-# Copy built application from builder stage
-COPY --from=builder /app/dist/metrics-dashboard /usr/share/nginx/html
+# Simple nginx config
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-# Create non-root user
-RUN addgroup -g 1000 -S app && \
-    adduser -u 1000 -S app -G app
-
-# Set proper permissions
-RUN chown -R app:app /var/cache/nginx && \
-    chown -R app:app /var/log/nginx && \
-    chown -R app:app /etc/nginx/conf.d && \
-    chown -R app:app /usr/share/nginx/html
-
-# Switch to non-root user
-USER app
-
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:80/ || exit 1
-
-# Expose port
 EXPOSE 80
 
-# Nginx runs in foreground in Alpine
 CMD ["nginx", "-g", "daemon off;"]
