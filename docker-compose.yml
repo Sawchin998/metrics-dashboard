@@ -1,0 +1,97 @@
+# docker-compose.yml
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: metrics-postgres
+    environment:
+      POSTGRES_DB: metrics_db
+      POSTGRES_USER: metrics_user
+      POSTGRES_PASSWORD: password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init/init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5432:5432"
+    networks:
+      - metrics-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U metrics_user -d metrics_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # Go Worker Service
+  go-worker:
+    build:
+      context: ./go-worker
+      dockerfile: Dockerfile
+    container_name: metrics-go-worker
+    environment:
+      DATABASE_URL: postgresql://metrics_user:password@postgres:5432/metrics_db?sslmode=disable
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - metrics-network
+    restart: unless-stopped
+
+  # Rails API Service
+  rails-api:
+    build:
+      context: ./rails-api
+      dockerfile: Dockerfile
+    container_name: metrics-rails-api
+    volumes:
+       - ./rails-api:/app
+    environment:
+      DATABASE_HOST: postgres
+      DATABASE_USERNAME: metrics_user
+      DATABASE_PASSWORD: password
+      DATABASE_NAME: metrics_db
+      RAILS_ENV: production
+      RAILS_LOG_TO_STDOUT: "true"
+    ports:
+      - "3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - metrics-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Angular Frontend Service
+  angular-frontend:
+    build:
+      context: ./angular-frontend
+      dockerfile: Dockerfile
+    container_name: metrics-angular-frontend
+    ports:
+      - "9000:80"
+    depends_on:
+      - rails-api
+    networks:
+      - metrics-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+# Named volumes for data persistence
+volumes:
+  postgres_data:
+    driver: local
+
+# Custom network for service communication
+networks:
+  metrics-network:
+    driver: bridge
