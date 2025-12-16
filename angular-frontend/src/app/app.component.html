@@ -1,0 +1,57 @@
+<!-- src/app/app.component.html -->
+<div class="dashboard">
+  <!-- Header -->
+  <header class="dashboard-header">
+    <h1>📊 Real-time Metrics Dashboard</h1>
+    <p>Live data from Go Worker → PostgreSQL → Rails API → Angular</p>
+    <button (click)="onRefresh()" class="refresh-btn">
+      🔄 Refresh Data
+    </button>
+  </header>
+
+  <!-- Latest Metrics Cards -->
+  <section class="latest-metrics">
+    <h2>Current Values</h2>
+    <div class="metrics-grid">
+      <div *ngFor="let metric of latestMetrics" class="metric-card">
+        <div class="metric-category">{{ metric.category }}</div>
+        <div class="metric-value">{{ metric.value }}</div>
+        <div class="metric-time">
+          {{ metric.timestamp | date:'shortTime' }}
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Charts Section -->
+  <section class="charts-section">
+    <h2>Trends Over Time</h2>
+    
+    <!-- Line Chart -->
+    <div class="chart-container">
+      <h3>Time Series</h3>
+      <app-line-chart [metrics]="metrics"></app-line-chart>
+    </div>
+    
+    <!-- Bar Chart -->
+    <div class="chart-container">
+      <h3>Average by Category</h3>
+      <app-bar-chart [stats]="stats"></app-bar-chart>
+    </div>
+  </section>
+
+  <!-- Statistics Section -->
+  <section class="stats-section" *ngIf="stats">
+    <h2>Statistics</h2>
+    <div class="stats-grid">
+      <div *ngFor="let category of getStatsCategories()" class="stat-card">
+        <h4>{{ category | titlecase }}</h4>
+        <div class="stat-details">
+          <div>Avg: {{ stats[category]?.average }}</div>
+          <div>Max: {{ stats[category]?.maximum }}</div>
+          <div>Min: {{ stats[category]?.minimum }}</div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
