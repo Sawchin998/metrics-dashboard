@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: metrics-dashboard
+  labels:
+    name: metrics-dashboard
+    environment: development
+---
+# ResourceQuota limits resource usage in the namespace
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: metrics-dashboard-quota
+  namespace: metrics-dashboard
+spec:
+  hard:
+    # Prevent resource exhaustion in Minikube
+    requests.cpu: "2"
+    requests.memory: 2Gi
+    limits.cpu: "4"
+    limits.memory: 4Gi
+    pods: "10"
+    services: "5"
+    configmaps: "10"
+    persistentvolumeclaims: "3"
