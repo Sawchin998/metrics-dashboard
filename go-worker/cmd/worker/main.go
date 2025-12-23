@@ -4,8 +4,10 @@ package main
 import (
 	"log"
 	"math/rand"
+	"os"
+	"strconv"
 	"time"
-	
+
 	"metrics-dashboard/go-worker/internal/database"
 	"metrics-dashboard/go-worker/internal/generator"
 )
@@ -26,8 +28,17 @@ func main() {
 	// Create metrics generator
 	metricsGen := generator.NewMetricsGenerator(db)
 	
-	// Start generating metrics every 10 seconds
-	ticker := time.NewTicker(10 * time.Second)
+	workerIntervalStr := os.Getenv("WORKER_INTERVAL")
+	if workerIntervalStr == "" {
+			workerIntervalStr = "10" // default 10 seconds
+	}
+
+	// Convert string to int
+	workerIntervalInt, err := strconv.Atoi(workerIntervalStr)
+	if err != nil {
+			log.Fatalf("WORKER_INTERVAL is invalid: %v", err)
+	}
+	ticker := time.NewTicker(time.Duration(workerIntervalInt) * time.Second)
 	defer ticker.Stop()
 	
 	log.Println("Worker started. Generating metrics every 10 seconds...")
