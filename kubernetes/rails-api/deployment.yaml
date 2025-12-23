@@ -1,0 +1,116 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rails-api
+  namespace: metrics-dashboard
+  labels:
+    app: rails-api
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: rails-api
+  template:
+    metadata:
+      labels:
+        app: rails-api
+    spec:
+      containers:
+      - name: rails-api
+        image: metrics-dashboard-rails-api:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 3000
+        env:
+        - name: DATABASE_URL
+          value: "postgresql://metrics_user:$(DATABASE_PASSWORD)@postgres-service:5432/metrics_db?sslmode=disable"
+        - name: DATABASE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: database-password
+        - name: RAILS_ENV
+          value: "production"
+        - name: SECRET_KEY_BASE
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: rails-secret-key-base
+        - name: RAILS_LOG_TO_STDOUT
+          value: "true"
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "200m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 3000
+            httpHeaders:
+            - name: Custom-Header
+              value: "Health-Check"
+          initialDelaySeconds: 60
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 3000
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 3
+        startupProbe:
+          httpGet:
+            path: /health
+            port: 3000
+          failureThreshold: 30
+          periodSeconds: 10
+        securityContext:
+          runAsUser: 1000
+          runAsGroup: 1000
+          allowPrivilegeEscalation: false
+      restartPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rails-api-service
+  namespace: metrics-dashboard
+spec:
+  selector:
+    app: rails-api
+  ports:
+  - port: 80
+    targetPort: 3000
+    protocol: TCP
+  type: ClusterIP
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: rails-api-hpa
+  namespace: metrics-dashboard
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: rails-api
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
