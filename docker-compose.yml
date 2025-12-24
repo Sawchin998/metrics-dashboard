@@ -31,7 +31,12 @@ services:
       dockerfile: Dockerfile
     container_name: metrics-go-worker
     environment:
-      DATABASE_URL: postgresql://metrics_user:password@postgres:5432/metrics_db?sslmode=disable
+      DB_HOST: metrics-postgres
+      DB_PORT: 5432
+      DB_USER: metrics_user
+      DB_PASSWORD: password
+      DB_NAME: metrics_db
+      DB_SSLMODE: disable
     depends_on:
       postgres:
         condition: service_healthy
