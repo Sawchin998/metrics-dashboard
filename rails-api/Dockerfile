@@ -50,7 +50,7 @@ USER app
 
 # Health check endpoint
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
-    CMD curl -f http://localhost:3000/health || exit 1
+    CMD curl -f http://localhost:3000/api/health || exit 1
 
 # Expose port
 EXPOSE 3000

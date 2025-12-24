@@ -22,8 +22,11 @@ spec:
         ports:
         - containerPort: 3000
         env:
-        - name: DATABASE_URL
-          value: "postgresql://metrics_user:$(DATABASE_PASSWORD)@postgres-service:5432/metrics_db?sslmode=disable"
+        - name: DATABASE_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: database.host
         - name: DATABASE_PASSWORD
           valueFrom:
             secretKeyRef:
@@ -47,7 +50,7 @@ spec:
             cpu: "500m"
         livenessProbe:
           httpGet:
-            path: /health
+            path: /api/health
             port: 3000
             httpHeaders:
             - name: Custom-Header
@@ -58,14 +61,14 @@ spec:
           failureThreshold: 3
         readinessProbe:
           httpGet:
-            path: /health
+            path: /api/health
             port: 3000
           initialDelaySeconds: 5
           periodSeconds: 5
           timeoutSeconds: 3
         startupProbe:
           httpGet:
-            path: /health
+            path: /api/health
             port: 3000
           failureThreshold: 30
           periodSeconds: 10
