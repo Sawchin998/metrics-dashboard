@@ -150,16 +150,9 @@ export class AppComponent implements OnInit {
   latestMetrics: Metric[] = [];
   loading = false;
   error: string | null = null;
-  
-  // Mock data for testing (remove when API is ready)
-  mockMetrics: Metric[] = [
-    { id: 1, value: 72, category: 'temperature', timestamp: new Date().toISOString() },
-    { id: 2, value: 45, category: 'sales', timestamp: new Date().toISOString() },
-    { id: 3, value: 58, category: 'users', timestamp: new Date().toISOString() },
-    { id: 4, value: 65, category: 'revenue', timestamp: new Date().toISOString() },
-  ];
-
   constructor(private http: HttpClient) {}
+
+  apiBaseUrl = (window as any).API_BASE_URL || 'http://localhost:3000';
 
   ngOnInit() {
     this.loadData();
@@ -170,11 +163,9 @@ export class AppComponent implements OnInit {
     this.error = null;
     
     setTimeout(() => {
-      this.metrics = this.mockMetrics;
-      this.latestMetrics = this.mockMetrics;
       this.loading = false;
       
-      this.http.get<any>('http://localhost:3000/metrics').subscribe({
+      this.http.get<any>(`${this.apiBaseUrl}/api/metrics`).subscribe({
         next: (response) => {
           this.metrics = response.metrics;
           this.loading = false;
@@ -185,7 +176,7 @@ export class AppComponent implements OnInit {
         }
       });
       
-      this.http.get<any>('http://localhost:3000/metrics/latest').subscribe({
+      this.http.get<any>(`${this.apiBaseUrl}/api/metrics/latest`).subscribe({
         next: (response) => {
           this.latestMetrics = response.metrics;
         }
