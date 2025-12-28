@@ -17,8 +17,8 @@ The Metrics Dashboard consists of the following components:
 
 ```
 Angular Frontend → Rails API → PostgreSQL
-                       ↑
-                   Go Worker
+                                  ↑
+                               Go Worker
 ```
 
 ---
