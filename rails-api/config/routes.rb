@@ -9,9 +9,7 @@ Rails.application.routes.draw do
 
     # Health check endpoint
     get :health, to: ->(_env) { [200, {}, ['OK']] }
+
+    root to: ->(_env) { [200, {}, ['Metrics API']] }
   end
-
-
-  # Root endpoint
-  root to: ->(_env) { [200, {}, ['Metrics API']] }
 end

@@ -23,7 +23,7 @@ spec:
         - containerPort: 80
         env:
         - name: API_BASE_URL
-          value: "http://rails-api-service"
+          value: http://metrics-dashboard.local
         resources:
           requests:
             memory: "128Mi"
