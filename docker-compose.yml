@@ -79,6 +79,8 @@ services:
       context: ./angular-frontend
       dockerfile: Dockerfile
     container_name: metrics-angular-frontend
+    environment:
+      API_BASE_URL: http://rails-api:3000
     ports:
       - "9000:80"
     depends_on:
